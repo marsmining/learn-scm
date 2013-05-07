@@ -11,3 +11,11 @@ My [solutions (src/nine.scm)](https://github.com/marsmining/learn-scm/blob/maste
 Following [The Little Schemer](http://www.amazon.com/Little-Schemer-Daniel-P-Friedman/dp/0262560992) in these [files (src/lil_00.scm)](https://github.com/marsmining/learn-scm/blob/master/src/lil_00.scm).
 
 SICP, etc found in [source dir](https://github.com/marsmining/learn-scm/tree/master/src).
+
+### Links
+
+From ch. 8 of Little Schemer, further reading:
+
+* http://en.wikipedia.org/wiki/Continuation_passing_style
+* http://en.wikipedia.org/wiki/Call-with-current-continuation
+* http://en.wikipedia.org/wiki/Continuation
