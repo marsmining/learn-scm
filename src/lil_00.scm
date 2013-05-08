@@ -263,17 +263,17 @@
 
 (equal? '(d e) (intersectall '((a b c d e f g) (f e d y) (d e g e))))
 
-(define (a-pair x)
+(define (a-pair? x)
   (cond ((atom? x) #f)
         ((null? x) #f)
         ((null? (cdr x)) #f)
         ((null? (cddr x)) #t)
         (else #f)))
 
-(eq? #t (a-pair '(a b)))
-(eq? #t (a-pair '(5 6)))
-(eq? #t (a-pair '((g b) (i g))))
-(eq? #f (a-pair '(a b c)))
+(eq? #t (a-pair? '(a b)))
+(eq? #t (a-pair? '(5 6)))
+(eq? #t (a-pair? '((g b) (i g))))
+(eq? #f (a-pair? '(a b c)))
 
 (define fst car)
 (define snd cadr)
@@ -374,7 +374,138 @@
 (define (looking a lat)
   (keep-looking a (pick 1 lat) lat))
 
-(define (shift x)
-  x)
+;; given a pair of sexp
+;; first elem of pair must have length 2
+;; second elem of pair can be anything
+;; make a new pair as shown.. strange
+(define (shift p)
+  (build (fst (fst p))
+         (build (snd (fst p))
+                (snd p))))
 
-(eq? '(a (b c)) (shift '((a b) c)))
+(equal? (shift '((a b) c))
+        '(a (b c)))
+(equal? (shift '((a b) (c d)))
+        '(a (b (c d))))
+
+;; base case here, when arg is atom
+;; or when snd of arg is atom, and
+;; fst is not a pair.. wierd
+(define (align pora)
+  (cond ((atom? pora) pora)
+        ((a-pair? (fst pora))
+         (align (shift pora)))
+        (else (build (fst pora)
+                     (align (snd pora))))))
+
+(align '((a b) (c d)))
+
+(define (length* l)
+  (cond ((null? l) 0)
+        ((atom? (car l)) (+ 1 (length* (cdr l))))
+        (else (+ (length* (car l))
+                 (length* (cdr l))))))
+
+(eq? 6 (length* '((a b (f g)) (c d))))
+
+;; implement length without define
+;; yikes ok re-read
+
+(define (eternity x)
+  (eternity x))
+
+(define (add1 n) (+ 1 n))
+
+((lambda (length)
+   (lambda (l)
+     (cond ((null? l) 0)
+           (else (add1 (length (cdr l)))))))
+ eternity)
+
+;; through fn app name mk-length
+;; and also name length thru app
+(define l0                 ; l0 is the result of applying 1st lambda to 2nd lambda
+  ((lambda (mk-length)          ; 1st lambda takes a fn and calls it w/eternity
+     (mk-length eternity))
+   (lambda (length)             ; given arg (eternity), return lambda
+     (lambda (l)                ; the lambda we return takes the lat we will
+       (cond ((null? l) 0) ; measure length of
+             (else (add1 (length (cdr l)))))))))
+
+(l0 '()) ; => 0 (holy moly works! for empty list only lol)
+
+(((lambda (mk-length)
+    (mk-length
+     (mk-length
+      (mk-length
+       (mk-length eternity)))))
+  (lambda (length)
+    (lambda (l)
+      (cond ((null? l) 0)
+            (else (add1 (length (cdr l))))))))
+ '(a b c))
+;; => 3 (woah)
+
+;; so what role does eternity have in above forms?
+;; none really, just acts like a bottom value i suppose
+
+(define l-n
+  ((lambda (mk-length)
+     (mk-length mk-length))
+   (lambda (mk-length)
+     (lambda (l)
+       (cond ((null? l) 0)
+             (else (add1 ((mk-length eternity)
+                          (cdr l)))))))))
+
+(l-n '(a))
+
+;; ok we're getting somewhere now, maybe
+
+;; ((lambda (mk-length)
+;;    (mk-length mk-length))
+;;  (lambda (mk-length)
+;;    ((lambda (length)
+;;       (lambda (l)
+;;         (cond ((null? l) 0)
+;;               (else (add1 (length (cdr l)))))))
+;;     (mk-length mk-length))))
+
+;; above fails, infinite recur
+
+(define l-x
+  ((lambda (le)
+     ((lambda (mk-length)
+        (mk-length mk-length))
+      (lambda (mk-length)
+        (le (lambda (x)
+              ((mk-length mk-length) x))))))
+   (lambda (length)
+     (lambda (l)
+       (cond ((null? l) 0)
+             (else (add1 (length (cdr l)))))))))
+
+(l-x '(a b c d e f g)) ; => 7 (jeesh finally!)
+
+;; applicative order y-combinator
+(define Y
+  (lambda (le)
+    ((lambda (f)
+       (f f))
+     (lambda (f)
+       (le (lambda (x)
+             ((f f) x)))))))
+
+((Y (lambda (length)
+      (lambda (l)
+        (cond ((null? l) 0)
+              (else (add1 (length (cdr l))))))))
+ '(1 2 3 4)) ; => 4
+
+;; yikes, that is crazy stuff
+
+(restart 1)
+
+;; ch. 10
+;; what is the value of all this?
+
