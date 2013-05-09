@@ -504,8 +504,74 @@
 
 ;; yikes, that is crazy stuff
 
-(restart 1)
-
 ;; ch. 10
 ;; what is the value of all this?
 
+(define new-entry build)
+
+(define (lookup-in-entry name entry entry-f)
+  (lookup-in-entry-help
+   name (fst entry) (snd entry) entry-f))
+
+(define (lookup-in-entry-help name names values entry-f)
+  (cond ((null? names) (entry-f name))
+        ((eq? (car names) name) (car values))
+        (else (lookup-in-entry-help
+               name (cdr names) (cdr values) entry-f))))
+
+(define extend-table cons)
+
+(define (lookup-in-table name table table-f)
+  (cond ((null? table) (table-f name))
+        (else (lookup-in-entry
+               name (car table)
+               (lambda (n)
+                 (lookup-in-table n (cdr table) table-f))))))
+
+(define (expression-to-action e)
+  (cond ((atom? e) (atom-to-action e))
+        (else (list-to-action e))))
+
+(define (atom-to-action e)
+  (cond ((number? e)       *const)
+        ((eq? e #t)        *const)
+        ((eq? e #f)        *const)
+        ((eq? e 'cons)     *const)
+        ((eq? e 'car)      *const)
+        ((eq? e 'cdr)      *const)
+        ((eq? e 'null?)    *const)
+        ((eq? e 'eq?)      *const)
+        ((eq? e 'atom?)    *const)
+        ((eq? e 'zero?)    *const)
+        ((eq? e 'add1?)    *const)
+        ((eq? e 'sub1?)    *const)
+        ((eq? e 'number?)  *const)
+        (else *identifier)))
+
+(define (list-to-action e)
+  (cond ((atom? (car e))
+         (cond ((eq? (car e) 'quote)
+                *quote)
+               ((eq? (car e) 'lambda)
+                *lambda)
+               ((eq? (car e) 'cond)
+                *cond)
+               (else *application)))
+        (else *application)))
+
+(define (value e)
+  (meaning e '()))
+
+(define (meaning e table)
+  ((expression-to-action e) e table))
+
+;; scratch tests
+(define eg0 (new-entry '(a b c d) '(10 11 12 13)))
+(define eg1 (new-entry '(w x y z) '(100 101 102 103)))
+(define tbl0 (extend-table eg1 (extend-table eg0 '())))
+(lookup-in-entry 'b eg0 (lambda (n) n))
+(lookup-in-table 'x tbl0 (lambda (n) (display n)))
+
+
+
+(restart 1)
