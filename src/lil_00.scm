@@ -543,8 +543,8 @@
         ((eq? e 'eq?)      *const)
         ((eq? e 'atom?)    *const)
         ((eq? e 'zero?)    *const)
-        ((eq? e 'add1?)    *const)
-        ((eq? e 'sub1?)    *const)
+        ((eq? e 'add1)     *const)
+        ((eq? e 'sub1)     *const)
         ((eq? e 'number?)  *const)
         (else *identifier)))
 
@@ -565,13 +565,174 @@
 (define (meaning e table)
   ((expression-to-action e) e table))
 
+(define (*const e table)
+  (cond ((number? e) e)
+        ((eq? e #t) #t)
+        ((eq? e #f) #f)
+        (else (build 'primitive e))))
+
+(define (*quote e table)
+  (text-of e))
+
+(define text-of snd)
+
+(define (*identifier e table)
+  (lookup-in-table e table initial-table))
+
+(define (initial-table name) (car '())) ; gen err
+
+(define (*lambda e table)
+  (build 'non-primitive (cons table (cdr e))))
+
+(meaning '(lambda (x) (cons x y)) '(((y z) ((8) 9))))
+;; => (non-primitive ( (((y z) ((8) 9))) (x) (cons x y) ))
+;; => (non-primitive ( env formal body ))
+
+(define table-of fst)
+(define formals-of snd)
+(define body-of caddr)
+
+(define (evcon lines table)
+  (cond ((else? (question-of (car lines)))
+         (meaning (answer-of (car lines)) table))
+        ((meaning (question-of (car lines)) table)
+         (meaning (answer-of (car lines)) table))
+        (else (evcon (cdr lines) table))))
+
+(define (else? e)
+  (and (atom? e) (eq? e 'else)))
+
+(define question-of fst)
+(define answer-of snd)
+
+(define (*cond e table)
+  (evcon (cond-lines-of e) table))
+
+(define cond-lines-of cdr)
+
+(define (evlis args table)
+  (cond ((null? args) '())
+        (else (cons (meaning (car args) table)
+                    (evlis (cdr args) table)))))
+
+(define (*application e table)
+  (apply1 (meaning (function-of e) table)
+          (evlis (arguments-of e) table)))
+
+(define function-of car)
+(define arguments-of cdr)
+
+(define (primitive? l)
+  (eq? (fst l) 'primitive))
+(define (non-primitive? l)
+  (eq? (fst l) 'non-primitive))
+
+(define (apply1 fun vals)
+  (cond ((primitive? fun)
+         (apply-primitive (snd fun) vals))
+        ((non-primitive? fun)
+         (apply-closure (snd fun) vals))))
+
+(define (apply-primitive name vals)
+  (cond
+   ((eq? name 'cons)
+    (cons (fst vals) (snd vals)))
+   ((eq? name 'car)
+    (car (fst vals)))
+   ((eq? name 'cdr)
+    (cdr (fst vals)))
+   ((eq? name 'null?)
+    (null? (fst vals)))
+   ((eq? name 'eq?)
+    (eq? (fst vals) (snd vals)))
+   ((eq? name 'atom?)
+    (:atom? (fst vals)))
+   ((eq? name 'zero?)
+    (zero? (fst vals)))
+   ((eq? name 'add1)
+    (add1 (fst vals)))
+   ((eq? name 'sub1)
+    (sub1 (fst vals)))
+   ((eq? name 'number?)
+    (number? (fst vals)))))
+
+(define (:atom? e)
+  (cond ((atom? e) #t)
+        ((null? e) #f)
+        ((eq? (car e) 'primitive) #t)
+        ((eq? (car e) 'non-primitive) #t)
+        (else #f)))
+
+;; how to find value of (f a b)?
+;; f is (lambda (x y) (cons x y))
+;; a=1, b=(2)
+
+;; add formals to env and substitute fn body?
+
+(define (apply-closure closure vals)
+  (meaning (body-of closure)
+           (extend-table
+            (new-entry (formals-of closure) vals)
+            (table-of closure))))
+
+;; test apply closure
+;;
+
+(define a-closure '((((u v w)
+                      (1 2 3))
+                     ((x y z)
+                      (4 5 6)))
+                    (x y)
+                    (cons z x)))
+
+(define a-vals '((a b c) (d e f)))
+
+;; test this guy
+(apply-closure a-closure a-vals)
+
+(body-of    a-closure) ; => (cons z x)
+(table-of   a-closure) ; => (((u v w) (1 2 3)) ((x y z) (4 5 6)))
+(formals-of a-closure) ; => (x y)
+
+(define a-tbl (extend-table (new-entry (formals-of a-closure) a-vals) (table-of a-closure)))
+;; => (((x y) ((a b c) (d e f))) ((u v w) (1 2 3)) ((x y z) (4 5 6)))
+
+(expression-to-action '(cons z x))
+(meaning (function-of '(cons z x)) a-tbl)
+(expression-to-action '(z x)) ; => *application
+
+;; follow
+(meaning '(cons z x) a-tbl)
+(evlis '(z x) a-tbl)  ; => (6 (a b c))
+(meaning 'cons a-tbl) ; => (primitive cons)
+
+(apply1 '(primitive cons) '(6 (a b c)))
+
+;; (define (*application e table)
+;;   (apply1 (meaning (function-of e) table)
+;;           (meaning (arguments-of e) table)))
+;; (define (meaning e table)
+;;   ((expression-to-action e) e table))
+
 ;; scratch tests
 (define eg0 (new-entry '(a b c d) '(10 11 12 13)))
 (define eg1 (new-entry '(w x y z) '(100 101 102 103)))
 (define tbl0 (extend-table eg1 (extend-table eg0 '())))
 (lookup-in-entry 'b eg0 (lambda (n) n))
 (lookup-in-table 'x tbl0 (lambda (n) (display n)))
+(*cond '(cond (coffee klatsch) (else party))
+       '(((coffee) (#t)) ((klatsch party) (5 (6)))))
 
+;; play w/interpreter
+;;
 
+;; primitive application
+(value '(cons 6 (quote (a b c))))
 
+;; non-primitive
+(value '((lambda (x y)
+           (cons x y))
+         9 (quote (d e f))))
+
+;; restart mit-scheme
 (restart 1)
