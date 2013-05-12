@@ -14,8 +14,24 @@ Ok so we're introduced to this `run*` fn or macro.
 
 ```scheme
 (run
- #f         ; not sure what this is
- (q)        ; query
+ #f         ; not sure what this is, typo?
+ (q)        ; logic variable
  (== #t q)  ; goal, unify true with query
  )          ; => (#t) returns one answer
 ```
+
+Then we're introduced to `fresh` which looks like `let`. Again, can't run any code :(. I know this book has something to do with [miniKanren](https://github.com/miniKanren/miniKanren), so gonna try to use that to run the code the book is introducing. Wait, seems book is based on Kanren, and seems co-author Oleg maintains code from book here: http://kanren.sourceforge.net/
+
+So grabbing code from there, we can do:
+
+```scheme
+(load "kanren-book/mk.scm")
+(load "kanren-book/mkextraforms.scm")
+(load "kanren-book/mkprelude.scm")
+
+(run*
+ (q)
+ (== #t q)) ; => (#t)
+```
+
+And it works! Can run the examples now while reading.
