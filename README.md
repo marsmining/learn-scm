@@ -10,6 +10,8 @@ My [solutions (src/nine.scm)](https://github.com/marsmining/learn-scm/blob/maste
 
 Following [The Little Schemer](http://www.amazon.com/Little-Schemer-Daniel-P-Friedman/dp/0262560992) in these [files (src/lil_00.scm)](https://github.com/marsmining/learn-scm/blob/master/src/lil_00.scm).
 
+My notes following [The Reasoned Schemer](http://www.amazon.com/Reasoned-Schemer-Daniel-P-Friedman/dp/0262562146) are [here (doc/reasoned.md)](https://github.com/marsmining/learn-scm/blob/master/doc/reasoned.md).
+
 SICP, etc found in [source dir](https://github.com/marsmining/learn-scm/tree/master/src).
 
 ### Links
