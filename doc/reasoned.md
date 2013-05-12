@@ -1,8 +1,12 @@
-## Notes while reading The Reasoned Schemer
+## Notes while reading "The Reasoned Schemer"
 
 ### Summary
 
-My notes following [The Reasoned Schemer](http://www.amazon.com/Reasoned-Schemer-Daniel-P-Friedman/dp/0262562146). Code is [here (src/reasoned.scm)](https://github.com/marsmining/learn-scm/blob/master/src/reasoned.scm).
+My notes following [The Reasoned Schemer](http://www.amazon.com/Reasoned-Schemer-Daniel-P-Friedman/dp/0262562146). Code is [here (src/reasoned.scm)](https://github.com/marsmining/learn-scm/blob/master/src/reasoned.scm). Using MIT/GNU Scheme 9.1.1.
+
+Using [Byrd's dissertation](https://scholarworks.iu.edu/dspace/bitstream/handle/2022/8777/Byrd_indiana_0093A_10344.pdf) as well to help understanding.
+
+Also this [youtube series](http://www.youtube.com/watch?v=vRrgaibcTYs), all of which is totally over my head atm.
 
 ### Preface
 
