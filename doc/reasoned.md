@@ -18,7 +18,7 @@ Ok so we're introduced to this `run*` fn or macro.
 
 ```scheme
 (run
- #f         ; not sure what this is, typo?
+ #f         ; not sure what this is.. ok it's the num results
  (q)        ; logic variable
  (== #t q)  ; goal, unify true with query
  )          ; => (#t) returns one answer
@@ -39,3 +39,4 @@ So grabbing code from there, we can do:
 ```
 
 And it works! Can run the examples now while reading.
+
